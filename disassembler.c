@@ -1,12 +1,11 @@
 #include "disassembler.h"
 
 
-unsigned int disassemble_8080(unsigned char *codebuffer, unsigned int pc){
+int disassemble_8080(unsigned char *codebuffer, int pc){
 	unsigned char *code = &codebuffer[pc];
 	unsigned int opbytes = 1;
   printf("%04x ", pc);
-	switch (*code)
-	{
+	switch (*code) {
 		case 0x00: printf("NOP"); break;
 		case 0x01: printf("LXI    B,#$%02x%02x", code[2], code[1]); opbytes=3; break;
 		case 0x02: printf("STAX   B"); break;
@@ -298,7 +297,7 @@ int from_file(char *file_name) {
 	unsigned char *buffer = malloc(fsize);
 	fread(buffer, fsize, 1, fd);
 	fclose(fd);
-	unsigned int pc = 0;
+	int pc = 0;
 
 	printf("fsize=%d\n", fsize);
 

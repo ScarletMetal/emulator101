@@ -1,6 +1,46 @@
-cycle(State8080 *state) {
-    unsigned char *opcode = &state->memory[state->pc];
+#include<stdio.h>
+#include<stdint.h>
+#include<stdlib.h>
 
+typedef struct Flags {
+	uint8_t z:1;
+	uint8_t s:1;
+	uint8_t cy:1;
+	uint8_t ac:1;
+	uint8_t p:3;
+} Flags; 
+
+typedef struct State8080 {
+	uint8_t a;
+	uint8_t b;
+	uint8_t c;
+	uint8_t d;
+	uint8_t e;
+	uint8_t h;
+	uint8_t l;
+
+	uint16_t sp;
+	uint16_t pc;
+
+	uint8_t *memory;
+	struct Flags flags;
+
+	uint8_t int_enable;
+} State8080;
+
+uint16_t make_word(uint8_t hb, uint8_t lb);
+
+void add(State8080 *state, uint8_t value);
+void adc(State8080 *state, uint8_t value);
+
+void sub(State8080 *state, uint8_t value);
+void sbb(State8080 *state, uint8_t value);
+
+
+void cycle(State8080 *state) {
+    unsigned char *opcode = &state->memory[state->pc];
+		uint16_t offset;
+		uint8_t value;
     switch (*opcode) {
         case 0x00: //NOP
             break;
@@ -22,7 +62,7 @@ cycle(State8080 *state) {
             state->b = state->l;
             break;
         case 0x46: // mov B, M == mov B, [hl]
-            uint16_t offset = 256U * ((uint16_t) state->h) + (uint16_t) state->l;
+            offset = make_word(state->h, state->l); 
             state->b = state->memory[offset];
             break;
         case 0x47: // mov B, A
@@ -46,7 +86,7 @@ cycle(State8080 *state) {
             state->c = state->l;
             break;
         case 0x4E: // mov C, M == mov C, [hl]
-            uint16_t offset = 256U * ((uint16_t) state->h) + (uint16_t) state->l;
+            offset = make_word(state->h, state->l); 
             state->c = state->memory[offset];
             break;
         case 0x4f: // mov C, A
@@ -70,7 +110,7 @@ cycle(State8080 *state) {
             state->d = state->l;
             break;
         case 0x56: // mov D, M == mov D, [hl]
-            uint16_t offset = 256U * ((uint16_t) state->h) + (uint16_t) state->l;
+            offset = make_word(state->h, state->l); 
             state->d = state->memory[offset];
             break;
         case 0x57: // mov D, A
@@ -94,7 +134,7 @@ cycle(State8080 *state) {
             state->e = state->l;
             break;
         case 0x5E: // mov E, M == mov E, [hl]
-            uint16_t offset = 256U * ((uint16_t) state->h) + (uint16_t) state->l;
+            offset = make_word(state->h, state->l); 
             state->e = state->memory[offset];
             break;
         case 0x5F: // mov E, A
@@ -110,7 +150,7 @@ cycle(State8080 *state) {
             state->h = state->d;
             break;
         case 0x63: // mov H, E
-            state->h = state->e
+            state->h = state->e;
             break;
         case 0x64: // mov H, H
             break;
@@ -118,7 +158,7 @@ cycle(State8080 *state) {
             state->h = state->l;
             break;
         case 0x66: // mov H, M == mov H, [hl]
-            uint16_t offset = 256U * ((uint16_t) state->h) + (uint16_t) state->l;
+            offset = make_word(state->h, state->l); 
             state->h = state->memory[offset];
             break;
         case 0x67: // mov h, A
@@ -134,7 +174,7 @@ cycle(State8080 *state) {
             state->l = state->d;
             break;
         case 0x6B: // mov H, E
-            state->l = state->e
+            state->l = state->e;
             break;
         case 0x6C: // mov L, H
             state->l = state->h;
@@ -142,12 +182,13 @@ cycle(State8080 *state) {
         case 0x6D: // mov L, L
             break;
         case 0x6E: // mov L, M == mov L, [hl]
-            uint16_t offset = 256U * ((uint16_t) state->h) + (uint16_t) state->l;
+            offset = make_word(state->h, state->l); 
             state->l = state->memory[offset];
             break;
         case 0x6F: // mov L, A
             state->l = state->a;
             break;
+				
         case 0x76: // HLT
             break;
         case 0x78: // mov A, B
@@ -160,7 +201,7 @@ cycle(State8080 *state) {
             state->a = state->d;
             break;
         case 0x7B: // mov H, E
-            state->a = state->e
+            state->a = state->e;
             break;
         case 0x7C: // mov A, H
             state->a = state->h;
@@ -168,10 +209,10 @@ cycle(State8080 *state) {
         case 0x7D: // mov A, A
             break;
         case 0x7E: // mov A, M == mov A, [hl]
-            uint16_t offset = 256U * ((uint16_t) state->h) + (uint16_t) state->l;
+            offset = make_word(state->h, state->l); 
             state->a = state->memory[offset];
             break;
-        case 0x7E: // mov A, A
+        case 0x7F: // mov A, A
             break;
         case 0x80: // add B
             add(state, state->b);
@@ -192,8 +233,8 @@ cycle(State8080 *state) {
             add(state, state->l);
             break;
         case 0x86: // add M == add [hl]
-            uint16_t offset = 256U * ((uint16_t) state->h) + (uint16_t) state->l;
-            uint8_t value = state->memory[offset];
+            offset = make_word(state->h, state->l); 
+            value = state->memory[offset];
             add(state, value);
             break;
         case 0x87: // add A
@@ -218,8 +259,8 @@ cycle(State8080 *state) {
             adc(state, state->l);
             break;
         case 0x8e: // adc M == adc [hl]
-            uint16_t offset = 256U * ((uint16_t) state->h) + state->l;
-            uint8_t value = state->memory[offset];
+            offset = make_word(state->h, state->l); 
+            value = state->memory[offset];
             adc(state, value);
             break;
         case 0x8f: // adc A
@@ -244,8 +285,8 @@ cycle(State8080 *state) {
             sub(state, state->l);
             break;
         case 0x96: // sub M == sub [hl]
-            uint16_t offset = 256U * ((uint16_t) state->h) + (uint16_t) state->l;
-            uint8_t value = state->memory[offset];
+            offset = make_word(state->h, state->l); 
+            value = state->memory[offset];
             sub(state, value);
             break;
         case 0x97: // sub A
@@ -269,48 +310,54 @@ cycle(State8080 *state) {
         case 0x9d: // sbb L
             sbb(state, state->l);
             break;
-        case 0x9e: // sbb M == sbb [bc]
-            uint16_t offset = 256U * ((uint16_t) state->h) + (uint16_t) state->l;
-            uint8_t value = state->memory[offset];
+        case 0x9e: // sbb M == sbb [hl]
+            offset = make_word(state->h, state->l);
+            value = state->memory[offset];
             sbb(state, value);
             break;
         case 0x9f: // sbb A
             sbb(state, state->a);
             break;
         default:
-            unimplemented_instruction(state);
+           exit(1); 
     }
     state->pc += 1;
 }
 
 void add(State8080 *state, uint8_t value) {
     uint16_t sum = (uint16_t) state->a + (uint16_t) value;
-    state->cc.z = ((sum & 0xff) == 0);
-    state->cc.s = ((sum & 0x80) != 0);
-    state->cc.cy = (sum > 0xff);
+    state->flags.z = ((sum & 0xff) == 0);
+    state->flags.s = ((sum & 0x80) != 0);
+    state->flags.cy = (sum > 0xff);
     state->a = sum & 0xff;
 }
 
 void adc(State8080 *state, uint8_t value) {
-    uint16_t sum = (uint16_t) state->a + (uint16_t) value + (uint16_t) state->cc.cy;
-    state->cc.z = ((sum & 0xff) == 0);
-    state->cc.s = ((sum & 0x80) != 0);
-    state->cc.cy = (sum > 0xff);
+    uint16_t sum = (uint16_t) state->a + (uint16_t) value + (uint16_t) state->flags.cy;
+    state->flags.z = ((sum & 0xff) == 0);
+    state->flags.s = ((sum & 0x80) != 0);
+    state->flags.cy = (sum > 0xff);
     state->a = sum & 0xff;
 }
 
 void sub(State8080 *state, uint8_t value) {
     uint16_t diff = (uint16_t) state->a - (uint16_t) value;
-    state->cc.z = ((diff & 0xff) == 0);
-    state->cc.s = ((diff & 0x80) != 0);
-    state->cc.cy = (diff > 0xff);
+    state->flags.z = ((diff & 0xff) == 0);
+    state->flags.s = ((diff & 0x80) != 0);
+    state->flags.cy = (diff > 0xff);
     state->a = diff & 0xff;
 }
 
 void sbb(State8080 *state, uint8_t value) {
-    uint16_t diff = (uint16_t) state->a - (uint16_t) value - (uint16_t) state->cc.cy;
-    state->cc.z = ((diff & 0xff) == 0);
-    state->cc.s = ((diff & 0x80) != 0);
-    state->cc.cy = (diff > 0xff);
+    uint16_t diff = (uint16_t) state->a - (uint16_t) value - (uint16_t) state->flags.cy;
+    state->flags.z = ((diff & 0xff) == 0);
+    state->flags.s = ((diff & 0x80) != 0);
+    state->flags.cy = (diff > 0xff);
     state->a = diff & 0xff;
 }
+
+uint16_t make_word(uint8_t hbyte, uint8_t lbyte) {
+		uint16_t word = (hbyte << 8) | lbyte;
+		return word;
+}
+void main() {}
