@@ -285,7 +285,7 @@ int disassemble_8080(unsigned char *codebuffer, int pc){
 int from_file(char *file_name) {
 	FILE *fd = fopen(file_name, "rb");
 	if (fd==NULL){
-		printf("Panic! File %s Not Found\n", argv[1]);
+		printf("Panic! File %s Not Found\n", file_name);
 		exit(1);
 	}
 
