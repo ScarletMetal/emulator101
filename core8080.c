@@ -29,10 +29,6 @@ typedef struct State8080 {
     uint8_t int_enable;
 } State8080;
 
-uint16_t make_word(uint8_t hb, uint8_t lb);
-
-int parity(int x, int size);
-
 // cpu instruction abstractions
 void add(State8080 *state, uint8_t value);
 
@@ -47,6 +43,15 @@ void call(State8080 *state, uint16_t addr);
 void ret(State8080 *state);
 
 void jump(State8080 *state, uint16_t addr);
+
+void mem_write(State8080 *state, uint16_t offset, uint8_t value);
+
+uint8_t mem_read(State8080 *state, uint16_t offset);
+
+// util functions 
+uint16_t make_word(uint8_t hb, uint8_t lb);
+
+int parity(int x, int size);
 
 void cycle(State8080 *state) {
     unsigned char *opcode = &state->memory[state->pc];
@@ -76,7 +81,7 @@ void cycle(State8080 *state) {
             break;
         case 0x46: // mov B, M == mov B, [hl]
             offset = make_word(state->h, state->l);
-            state->b = state->memory[offset];
+            state->b = mem_read(state, offset); 
             break;
         case 0x47: // mov B, A
             state->b = state->a;
@@ -100,7 +105,7 @@ void cycle(State8080 *state) {
             break;
         case 0x4E: // mov C, M == mov C, [hl]
             offset = make_word(state->h, state->l);
-            state->c = state->memory[offset];
+            state->c = mem_read(state, offset); 
             break;
         case 0x4f: // mov C, A
             state->c = state->a;
@@ -124,7 +129,7 @@ void cycle(State8080 *state) {
             break;
         case 0x56: // mov D, M == mov D, [hl]
             offset = make_word(state->h, state->l);
-            state->d = state->memory[offset];
+            state->d = mem_read(state, offset); 
             break;
         case 0x57: // mov D, A
             state->d = state->a;
@@ -148,7 +153,7 @@ void cycle(State8080 *state) {
             break;
         case 0x5E: // mov E, M == mov E, [hl]
             offset = make_word(state->h, state->l);
-            state->e = state->memory[offset];
+            state->e = mem_read(state, offset); 
             break;
         case 0x5F: // mov E, A
             state->e = state->a;
@@ -172,14 +177,14 @@ void cycle(State8080 *state) {
             break;
         case 0x66: // mov H, M == mov H, [hl]
             offset = make_word(state->h, state->l);
-            state->h = state->memory[offset];
+            state->h = mem_read(state, offset); 
             break;
         case 0x67: // mov h, A
             state->h = state->a;
             break;
         case 0x68: // mov L, B
             state->l = state->b;
-            break;
+            break;000a 
         case 0x69: // mov L, C
             state->l = state->c;
             break;
@@ -196,7 +201,7 @@ void cycle(State8080 *state) {
             break;
         case 0x6E: // mov L, M == mov L, [hl]
             offset = make_word(state->h, state->l);
-            state->l = state->memory[offset];
+            state->l = mem_read(state, offset); 
             break;
         case 0x6F: // mov L, A
             state->l = state->a;
@@ -223,7 +228,7 @@ void cycle(State8080 *state) {
             break;
         case 0x7E: // mov A, M == mov A, [hl]
             offset = make_word(state->h, state->l);
-            state->a = state->memory[offset];
+            state->a = mem_read(state, offset); 
             break;
         case 0x7F: // mov A, A
             break;
@@ -247,7 +252,7 @@ void cycle(State8080 *state) {
             break;
         case 0x86: // add M == add [hl]
             offset = make_word(state->h, state->l);
-            value = state->memory[offset];
+            value = mem_read(state, offset); 
             add(state, value);
             break;
         case 0x87: // add A
@@ -273,7 +278,7 @@ void cycle(State8080 *state) {
             break;
         case 0x8e: // adc M == adc [hl]
             offset = make_word(state->h, state->l);
-            value = state->memory[offset];
+            value = mem_read(state, offset); 
             adc(state, value);
             break;
         case 0x8f: // adc A
@@ -299,7 +304,7 @@ void cycle(State8080 *state) {
             break;
         case 0x96: // sub M == sub [hl]
             offset = make_word(state->h, state->l);
-            value = state->memory[offset];
+            value = mem_read(state, offset); 
             sub(state, value);
             break;
         case 0x97: // sub A
@@ -325,7 +330,7 @@ void cycle(State8080 *state) {
             break;
         case 0x9e: // sbb M == sbb [hl]
             offset = make_word(state->h, state->l);
-            value = state->memory[offset];
+            value = mem_read(state, offset); 
             sbb(state, value);
             break;
         case 0x9f: // sbb A
@@ -445,4 +450,11 @@ int parity(int x, int size) {
     return ((p & 0x1) == 0);
 }
 
+void mem_write(State8080 *state, uint16_t offset, uint8_t value) {
+	state->memory[offset] = value;
+}
+
+void mem_read(State8080 *state, uint16_t offset) {
+	return state->memory[uint16_t];
+}
 void main() {}
