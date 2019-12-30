@@ -184,7 +184,7 @@ void cycle(State8080 *state) {
             break;
         case 0x68: // mov L, B
             state->l = state->b;
-            break;000a 
+            break;
         case 0x69: // mov L, C
             state->l = state->c;
             break;
@@ -454,7 +454,7 @@ void mem_write(State8080 *state, uint16_t offset, uint8_t value) {
 	state->memory[offset] = value;
 }
 
-void mem_read(State8080 *state, uint16_t offset) {
-	return state->memory[uint16_t];
+uint8_t mem_read(State8080 *state, uint16_t offset) {
+	return state->memory[offset];
 }
 void main() {}
