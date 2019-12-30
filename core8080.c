@@ -2,16 +2,16 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-typedef struct Flags {
+struct Flags {
     uint8_t z:1;
     uint8_t s:1;
     uint8_t cy:1;
     uint8_t ac:1;
     uint8_t p:1;
     uint8_t pad:3;
-} Flags;
+};
 
-typedef struct State8080 {
+struct State8080 {
     uint8_t a;
     uint8_t b;
     uint8_t c;
@@ -27,26 +27,26 @@ typedef struct State8080 {
     struct Flags flags;
 
     uint8_t int_enable;
-} State8080;
+};
 
 // cpu instruction abstractions
-void add(State8080 *state, uint8_t value);
+void add(struct State8080 *state, uint8_t value);
 
-void adc(State8080 *state, uint8_t value);
+void adc(struct State8080 *state, uint8_t value);
 
-void sub(State8080 *state, uint8_t value);
+void sub(struct State8080 *state, uint8_t value);
 
-void sbb(State8080 *state, uint8_t value);
+void sbb(struct State8080 *state, uint8_t value);
 
-void call(State8080 *state, uint16_t addr);
+void call(struct State8080 *state, uint16_t addr);
 
-void ret(State8080 *state);
+void ret(struct State8080 *state);
 
-void jump(State8080 *state, uint16_t addr);
+void jump(struct State8080 *state, uint16_t addr);
 
-void mem_write(State8080 *state, uint16_t offset, uint8_t value);
+void mem_write(struct State8080 *state, uint16_t offset, uint8_t value);
 
-uint8_t mem_read(State8080 *state, uint16_t offset);
+uint8_t mem_read(struct State8080 *state, uint16_t offset);
 
 // util functions 
 uint16_t make_word(uint8_t hb, uint8_t lb);
@@ -57,9 +57,9 @@ uint8_t get_high_byte(uint16_t word);
 
 int parity(int x, int size);
 
-void print_state(State8080 *state);
+void print_state(struct State8080 *state);
 
-void cycle(State8080 *state) {
+void cycle(struct State8080 *state) {
     unsigned char *opcode = &state->memory[state->pc];
     uint16_t offset, w;
     uint8_t value, b1, b2;
@@ -439,7 +439,7 @@ void cycle(State8080 *state) {
     state->pc += 1;
 }
 
-void add(State8080 *state, uint8_t value) {
+void add(struct State8080 *state, uint8_t value) {
     uint16_t sum = (uint16_t) state->a + (uint16_t) value;
     state->flags.z = ((sum & 0xff) == 0);
     state->flags.s = ((sum & 0x80) != 0);
@@ -448,7 +448,7 @@ void add(State8080 *state, uint8_t value) {
     state->a = sum & 0xff;
 }
 
-void adc(State8080 *state, uint8_t value) {
+void adc(struct State8080 *state, uint8_t value) {
     uint16_t sum = (uint16_t) state->a + (uint16_t) value + (uint16_t) state->flags.cy;
     state->flags.z = ((sum & 0xff) == 0);
     state->flags.s = ((sum & 0x80) != 0);
@@ -457,7 +457,7 @@ void adc(State8080 *state, uint8_t value) {
     state->a = sum & 0xff;
 }
 
-void sub(State8080 *state, uint8_t value) {
+void sub(struct State8080 *state, uint8_t value) {
     uint16_t diff = (uint16_t) state->a - (uint16_t) value;
     state->flags.z = ((diff & 0xff) == 0);
     state->flags.s = ((diff & 0x80) != 0);
@@ -466,7 +466,7 @@ void sub(State8080 *state, uint8_t value) {
     state->a = diff & 0xff;
 }
 
-void sbb(State8080 *state, uint8_t value) {
+void sbb(struct State8080 *state, uint8_t value) {
     uint16_t diff = (uint16_t) state->a - (uint16_t) value - (uint16_t) state->flags.cy;
     state->flags.z = ((diff & 0xff) == 0);
     state->flags.s = ((diff & 0x80) != 0);
@@ -475,7 +475,7 @@ void sbb(State8080 *state, uint8_t value) {
     state->a = diff & 0xff;
 }
 
-void call(State8080 *state, uint16_t addr) {
+void call(struct State8080 *state, uint16_t addr) {
     uint16_t offset = state->pc + 2;
     state->memory[state->sp - 1] = (offset >> 8) & 0xff;
     state->memory[state->sp - 2] = offset & 0xff;
@@ -483,13 +483,13 @@ void call(State8080 *state, uint16_t addr) {
     state->pc = addr;
 }
 
-void ret(State8080 *state) {
+void ret(struct State8080 *state) {
     uint16_t offset = state->pc;
     state->pc = make_word(state->memory[offset], state->memory[offset + 1]);
     state->sp += 2;
 }
 
-void jump(State8080 *state, uint16_t addr) {
+void jump(struct State8080 *state, uint16_t addr) {
     state->pc = addr;
 }
 
@@ -508,11 +508,11 @@ int parity(int x, int size) {
     return ((p & 0x1) == 0);
 }
 
-void mem_write(State8080 *state, uint16_t offset, uint8_t value) {
+void mem_write(struct State8080 *state, uint16_t offset, uint8_t value) {
 	state->memory[offset] = value;
 }
 
-uint8_t mem_read(State8080 *state, uint16_t offset) {
+uint8_t mem_read(struct State8080 *state, uint16_t offset) {
 	return state->memory[offset];
 }
 
@@ -524,7 +524,7 @@ uint8_t get_high_byte(uint16_t word) {
 	return (uint8_t) word >> 8;
 }
 
-void print_state(State8080 *state) {
+void print_state(struct State8080 *state) {
 	printf("A: %x, B: %x, C: %x, D: %x, E: %x, H: %x, L: %x \n", state->a, state->b, state->c, state->d, state->e, state->h, state->l);
 	printf("Z: %x, S: %x, CY: %x, AC: %x, P: %x \n\n", state->flags.z, state->flags.s, state->flags.cy, state->flags.ac, state->flags.p);
 }
