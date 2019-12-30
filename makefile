@@ -7,3 +7,6 @@ emulator101: disassembler.o core8080.o
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
+
+clean: 
+	rm *.o
