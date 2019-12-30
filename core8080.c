@@ -33,7 +33,7 @@ int parity(int x, int size);
 
 void print_state(struct State8080 *state);
 
-void cycle(struct State8080 *state) {
+int cycle(struct State8080 *state) {
     unsigned char *opcode = &state->memory[state->pc];
     uint16_t offset, w;
     uint8_t value, b1, b2;
@@ -63,6 +63,9 @@ void cycle(struct State8080 *state) {
 						b1 = opcode[1];
 						state->b = b1; 
 						state->pc += 1;
+						break;
+				case 0x08:
+						return 1;
 						break;
 				case 0x0e: // MVI C, D8
 						b1 = opcode[1];
@@ -411,6 +414,7 @@ void cycle(struct State8080 *state) {
             exit(1);
     }
     state->pc += 1;
+		return 0;
 }
 
 void add(struct State8080 *state, uint8_t value) {
@@ -516,4 +520,10 @@ int load_bin_file(struct State8080 *state, int offset, char *file_name) {
 	for (int i = 0; i < fsize; i++) {
 		mem_write(state, offset+i, mem[i]);	
 	}
+}
+
+struct State8080 *make_state(int mem_size) {
+	struct State8080 *state = malloc(sizeof(struct State8080));
+	state->memory = calloc(mem_size, sizeof(uint8_t));
+	return state;
 }
