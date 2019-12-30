@@ -503,13 +503,13 @@ void print_state(struct State8080 *state) {
 	printf("Z: %x, S: %x, CY: %x, AC: %x, P: %x \n\n", state->flags.z, state->flags.s, state->flags.cy, state->flags.ac, state->flags.p);
 }
 
-void load_bin_file(struct State8080 *state, int offset, char *file_name) {
+int load_bin_file(struct State8080 *state, int offset, char *file_name) {
 	FILE *fd = fopen(file_name, "rb");
 
 	fseek(fd, 0L, SEEK_END);
 	int fsize = ftell(fd);
 	fseek(fd, 0L, SEEK_SET);
-
+	printf("fsize %d\n", fsize);
 	uint8_t *mem = malloc(fsize);
 	fread(mem, fsize, 1, fd);
 	fclose(fd);

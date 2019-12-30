@@ -29,4 +29,4 @@ struct State8080 {
 };
 
 void cycle(struct State8080 *state);
-void load_bin_file(struct State8080 *state, int offset, char *file_name);
+int load_bin_file(struct State8080 *state, int offset, char *file_name);
