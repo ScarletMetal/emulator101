@@ -73,7 +73,7 @@ void cycle(struct State8080 *state) {
 						b1 = opcode[1];
 						state->d = b1;
 						state->pc += 1;
-						break;
+					break;
 				case 0x1e: // MVI E, D8
 						b1 = opcode[1];
 						state->e = b1;
@@ -501,4 +501,19 @@ uint8_t get_high_byte(uint16_t word) {
 void print_state(struct State8080 *state) {
 	printf("A: %x, B: %x, C: %x, D: %x, E: %x, H: %x, L: %x \n", state->a, state->b, state->c, state->d, state->e, state->h, state->l);
 	printf("Z: %x, S: %x, CY: %x, AC: %x, P: %x \n\n", state->flags.z, state->flags.s, state->flags.cy, state->flags.ac, state->flags.p);
+}
+
+void load_bin_file(struct State8080 *state, int offset, char *file_name) {
+	FILE *fd = fopen(file_name, "rb");
+
+	fseek(fd, 0L, SEEK_END);
+	int fsize = ftell(fd);
+	fseek(fd, 0L, SEEK_SET);
+
+	uint8_t *mem = malloc(fsize);
+	fread(mem, fsize, 1, fd);
+	fclose(fd);
+	for (int i = 0; i < fsize; i++) {
+		mem_write(state, offset+i, mem[i]);	
+	}
 }

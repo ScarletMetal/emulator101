@@ -1,4 +1,6 @@
-
+#include <stdint.h>
+#include <stdlib.h>
+#include <stddef.h>
 struct Flags {
     uint8_t z:1;
     uint8_t s:1;
@@ -27,3 +29,4 @@ struct State8080 {
 };
 
 void cycle(struct State8080 *state);
+void load_bin_file(struct State8080 *state, int offset, char *file_name);
