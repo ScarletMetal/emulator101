@@ -57,6 +57,7 @@ uint8_t get_high_byte(uint16_t word);
 
 int parity(int x, int size);
 
+void print_state(State8080 *state);
 
 void cycle(State8080 *state) {
     unsigned char *opcode = &state->memory[state->pc];
@@ -112,6 +113,11 @@ void cycle(State8080 *state) {
 				case 0x2e: // MVI L, D8
 						b1 = opcode[1];
 						state->h = b1;
+						state->pc += 1;
+						break;
+				case 0x3e: // MVI, A, D8
+						b1 = opcode[1];
+						state->a = b1;
 						state->pc += 1;
 						break;
 				case 0x40: // MOV B, B
@@ -427,7 +433,7 @@ void cycle(State8080 *state) {
             else state->pc += 2;
             break;
         default:
-            printf("Panic! Unknown Instruction %s", opcode);
+            printf("Panic! Unknown Instruction %x", opcode[0]);
             exit(1);
     }
     state->pc += 1;
@@ -516,5 +522,10 @@ uint8_t get_low_byte(uint16_t word) {
 
 uint8_t get_high_byte(uint16_t word) {
 	return (uint8_t) word >> 8;
+}
+
+void print_state(State8080 *state) {
+	printf("A: %x, B: %x, C: %x, D: %x, E: %x, H: %x, L: %x \n", state->a, state->b, state->c, state->d, state->e, state->h, state->l);
+	printf("Z: %x, S: %x, CY: %x, AC: %x, P: %x \n\n", state->flags.z, state->flags.s, state->flags.cy, state->flags.ac, state->flags.p);
 }
 void main() {}
