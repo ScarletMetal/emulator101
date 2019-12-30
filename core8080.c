@@ -51,289 +51,341 @@ uint8_t mem_read(State8080 *state, uint16_t offset);
 // util functions 
 uint16_t make_word(uint8_t hb, uint8_t lb);
 
+uint8_t get_low_byte(uint16_t word);
+
+uint8_t get_high_byte(uint16_t word);
+
 int parity(int x, int size);
+
 
 void cycle(State8080 *state) {
     unsigned char *opcode = &state->memory[state->pc];
-    uint16_t offset;
-    uint8_t value;
+    uint16_t offset, w;
+    uint8_t value, b1, b2;
 
     int addr;
     switch (*opcode) {
         case 0x00: //NOP
             break;
-        case 0x40: // mov B, B
+				case 0x01: // LXI B, D16
+						b1 = mem_read(state, opcode[1]);
+						b2 = mem_read(state, opcode[2]);
+						state->b = b2;
+						state->c = b1;
+						state->pc += 2;
+						break;
+				case 0x02: // STAX B
+						offset = make_word(state->b, state->c);
+						mem_write(state, offset, state->a);
+						break;
+				case 0x03: // INX B
+						w = make_word(state->b, state->c);
+						w += 1;
+						state->b = get_high_byte(w);
+						state->c = get_low_byte(w);
+						break;
+				case 0x06: // MVI B, D8
+						b1 = opcode[1];
+						state->b = b1; 
+						state->pc += 1;
+						break;
+				case 0x0e: // MVI C, D8
+						b1 = opcode[1];
+						state->c = b1;
+						state->pc += 1;
+						break;
+				case 0x16: // MVI D, D8
+						b1 = opcode[1];
+						state->d = b1;
+						state->pc += 1;
+						break;
+				case 0x1e: // MVI E, D8
+						b1 = opcode[1];
+						state->e = b1;
+						state->pc += 1;
+						break;
+				case 0x26: // MVI H, D8
+						b1 = opcode[1];
+						state->h = b1;
+						state->pc += 1;
+						break;
+				case 0x2e: // MVI L, D8
+						b1 = opcode[1];
+						state->h = b1;
+						state->pc += 1;
+						break;
+				case 0x40: // MOV B, B
             break;
-        case 0x41: // mov B, C
+        case 0x41: // MOV B, C
             state->b = state->c;
             break;
-        case 0x42: // mov B, D
+        case 0x42: // MOV B, D
             state->b = state->d;
             break;
-        case 0x43: // mov B, E
+        case 0x43: // MOV B, E
             state->b = state->e;
             break;
-        case 0x44: // mov B, H
+        case 0x44: // MOV B, H
             state->b = state->h;
             break;
-        case 0x45: // mov B, L
+        case 0x45: // MOV B, L
             state->b = state->l;
             break;
-        case 0x46: // mov B, M == mov B, [hl]
+        case 0x46: // MOV B, M == MOV B, [hl]
             offset = make_word(state->h, state->l);
             state->b = mem_read(state, offset); 
             break;
-        case 0x47: // mov B, A
+        case 0x47: // MOV B, A
             state->b = state->a;
             break;
-        case 0x48: // mov C, B
+        case 0x48: // MOV C, B
             state->c = state->b;
             break;
-        case 0x49: // mov C, C
+        case 0x49: // MOV C, C
             break;
-        case 0x4A: // mov C, D
+        case 0x4A: // MOV C, D
             state->c = state->d;
             break;
-        case 0x4B: // mov C, E
+        case 0x4B: // MOV C, E
             state->c = state->e;
             break;
-        case 0x4C: // mov C, H
+        case 0x4C: // MOV C, H
             state->c = state->h;
             break;
-        case 0x4D: // mov C, L
+        case 0x4D: // MOV C, L
             state->c = state->l;
             break;
-        case 0x4E: // mov C, M == mov C, [hl]
+        case 0x4E: // MOV C, M == MOV C, [hl]
             offset = make_word(state->h, state->l);
             state->c = mem_read(state, offset); 
             break;
-        case 0x4f: // mov C, A
+        case 0x4f: // MOV C, A
             state->c = state->a;
             break;
-        case 0x50: // mov D, B
+        case 0x50: // MOV D, B
             state->d = state->b;
             break;
-        case 0x51: // mov D, C
+        case 0x51: // MOV D, C
             state->d = state->c;
             break;
-        case 0x52: // mov D, d
+        case 0x52: // MOV D, d
             break;
-        case 0x53: // mov D, E
+        case 0x53: // MOV D, E
             state->d = state->e;
             break;
-        case 0x54: // mov D, H
+        case 0x54: // MOV D, H
             state->d = state->h;
             break;
-        case 0x55: // mov D, L
+        case 0x55: // MOV D, L
             state->d = state->l;
             break;
-        case 0x56: // mov D, M == mov D, [hl]
+        case 0x56: // MOV D, M == MOV D, [hl]
             offset = make_word(state->h, state->l);
             state->d = mem_read(state, offset); 
             break;
-        case 0x57: // mov D, A
+        case 0x57: // MOV D, A
             state->d = state->a;
             break;
-        case 0x58: // mov e, B
+        case 0x58: // MOV e, B
             state->e = state->b;
             break;
-        case 0x59: // mov e, C
+        case 0x59: // MOV e, C
             state->e = state->c;
             break;
-        case 0x5A: // mov E, D
+        case 0x5A: // MOV E, D
             state->e = state->d;
             break;
-        case 0x5B: // mov E, E
+        case 0x5B: // MOV E, E
             break;
-        case 0x5C: // mov E, H
+        case 0x5C: // MOV E, H
             state->e = state->h;
             break;
-        case 0x5D: // mov E, L
+        case 0x5D: // MOV E, L
             state->e = state->l;
             break;
-        case 0x5E: // mov E, M == mov E, [hl]
+        case 0x5E: // MOV E, M == MOV E, [hl]
             offset = make_word(state->h, state->l);
             state->e = mem_read(state, offset); 
             break;
-        case 0x5F: // mov E, A
+        case 0x5F: // MOV E, A
             state->e = state->a;
             break;
-        case 0x60: // mov H, B
+        case 0x60: // MOV H, B
             state->h = state->b;
             break;
-        case 0x61: // mov H, C
+        case 0x61: // MOV H, C
             state->h = state->c;
             break;
-        case 0x62: // mov H, D
+        case 0x62: // MOV H, D
             state->h = state->d;
             break;
-        case 0x63: // mov H, E
+        case 0x63: // MOV H, E
             state->h = state->e;
             break;
-        case 0x64: // mov H, H
+        case 0x64: // MOV H, H
             break;
-        case 0x65: // mov H, L
+        case 0x65: // MOV H, L
             state->h = state->l;
             break;
-        case 0x66: // mov H, M == mov H, [hl]
+        case 0x66: // MOV H, M == MOV H, [hl]
             offset = make_word(state->h, state->l);
             state->h = mem_read(state, offset); 
             break;
-        case 0x67: // mov h, A
+        case 0x67: // MOV h, A
             state->h = state->a;
             break;
-        case 0x68: // mov L, B
+        case 0x68: // MOV L, B
             state->l = state->b;
             break;
-        case 0x69: // mov L, C
+        case 0x69: // MOV L, C
             state->l = state->c;
             break;
-        case 0x6A: // mov L, D
+        case 0x6A: // MOV L, D
             state->l = state->d;
             break;
-        case 0x6B: // mov H, E
+        case 0x6B: // MOV H, E
             state->l = state->e;
             break;
-        case 0x6C: // mov L, H
+        case 0x6C: // MOV L, H
             state->l = state->h;
             break;
-        case 0x6D: // mov L, L
+        case 0x6D: // MOV L, L
             break;
-        case 0x6E: // mov L, M == mov L, [hl]
+        case 0x6E: // MOV L, M == MOV L, [hl]
             offset = make_word(state->h, state->l);
             state->l = mem_read(state, offset); 
             break;
-        case 0x6F: // mov L, A
+        case 0x6F: // MOV L, A
             state->l = state->a;
             break;
 
         case 0x76: // HLT
             break;
-        case 0x78: // mov A, B
+        case 0x78: // MOV A, B
             state->a = state->b;
             break;
-        case 0x79: // mov A, C
+        case 0x79: // MOV A, C
             state->a = state->c;
             break;
-        case 0x7A: // mov A, D
+        case 0x7A: // MOV A, D
             state->a = state->d;
             break;
-        case 0x7B: // mov H, E
+        case 0x7B: // MOV H, E
             state->a = state->e;
             break;
-        case 0x7C: // mov A, H
+        case 0x7C: // MOV A, H
             state->a = state->h;
             break;
-        case 0x7D: // mov A, A
+        case 0x7D: // MOV A, A
             break;
-        case 0x7E: // mov A, M == mov A, [hl]
+        case 0x7E: // MOV A, M == MOV A, [hl]
             offset = make_word(state->h, state->l);
             state->a = mem_read(state, offset); 
             break;
-        case 0x7F: // mov A, A
+        case 0x7F: // MOV A, A
             break;
-        case 0x80: // add B
+        case 0x80: // ADD B
             add(state, state->b);
             break;
-        case 0x81: // add C
+        case 0x81: // ADD C
             add(state, state->c);
             break;
-        case 0x82: // add D
+        case 0x82: // ADD D
             add(state, state->d);
             break;
-        case 0x83: // add E
+        case 0x83: // ADD E
             add(state, state->e);
             break;
-        case 0x84: // add H
+        case 0x84: // ADD H
             add(state, state->h);
             break;
-        case 0x85: // add L
+        case 0x85: // ADD L
             add(state, state->l);
             break;
-        case 0x86: // add M == add [hl]
+        case 0x86: // ADD M == ADD [hl]
             offset = make_word(state->h, state->l);
             value = mem_read(state, offset); 
             add(state, value);
             break;
-        case 0x87: // add A
+        case 0x87: // ADD A
             add(state, state->a);
             break;
-        case 0x88: // adc B
+        case 0x88: // ADC B
             adc(state, state->b);
             break;
-        case 0x89: // adc C
+        case 0x89: // ADC C
             adc(state, state->c);
             break;
-        case 0x8a: // adc D
+        case 0x8a: // ADC D
             adc(state, state->d);
             break;
-        case 0x8b: // adc E
+        case 0x8b: // ADC E
             adc(state, state->e);
             break;
-        case 0x8c: // adc H
+        case 0x8c: // ADC H
             adc(state, state->h);
             break;
-        case 0x8d: // adc L
+        case 0x8d: // ADC L
             adc(state, state->l);
             break;
-        case 0x8e: // adc M == adc [hl]
+        case 0x8e: // ADC M == ADC [hl]
             offset = make_word(state->h, state->l);
             value = mem_read(state, offset); 
             adc(state, value);
             break;
-        case 0x8f: // adc A
+        case 0x8f: // ADC A
             adc(state, state->a);
             break;
-        case 0x90: // sub B
+        case 0x90: // SUB B
             sub(state, state->b);
             break;
-        case 0x91: // sub C
+        case 0x91: // SUB C
             sub(state, state->c);
             break;
-        case 0x92: // sub D
+        case 0x92: // SUB D
             sub(state, state->d);
             break;
-        case 0x93: // sub E
+        case 0x93: // SUB E
             sub(state, state->e);
             break;
-        case 0x94: // sub H
+        case 0x94: // SUB H
             sub(state, state->h);
             break;
-        case 0x95: // sub L
+        case 0x95: // SUB L
             sub(state, state->l);
             break;
-        case 0x96: // sub M == sub [hl]
+        case 0x96: // SUB M == SUB [hl]
             offset = make_word(state->h, state->l);
             value = mem_read(state, offset); 
             sub(state, value);
             break;
-        case 0x97: // sub A
+        case 0x97: // SUB A
             sub(state, state->a);
             break;
-        case 0x98: // sbb B
+        case 0x98: // SBB B
             sbb(state, state->b);
             break;
-        case 0x99: // sbb C
+        case 0x99: // SBB C
             sbb(state, state->c);
             break;
-        case 0x9a: // sbb D
+        case 0x9a: // SBB D
             sbb(state, state->d);
             break;
-        case 0x9b: // sbb E
+        case 0x9b: // SBB E
             sbb(state, state->e);
             break;
-        case 0x9c: // sbb H
+        case 0x9c: // SBB H
             sbb(state, state->h);
             break;
-        case 0x9d: // sbb L
+        case 0x9d: // SBB L
             sbb(state, state->l);
             break;
-        case 0x9e: // sbb M == sbb [hl]
+        case 0x9e: // SBB M == SBB [hl]
             offset = make_word(state->h, state->l);
             value = mem_read(state, offset); 
             sbb(state, value);
             break;
-        case 0x9f: // sbb A
+        case 0x9f: // SBB A
             sbb(state, state->a);
             break;
         case 0xc2: // jnz adr
@@ -456,5 +508,13 @@ void mem_write(State8080 *state, uint16_t offset, uint8_t value) {
 
 uint8_t mem_read(State8080 *state, uint16_t offset) {
 	return state->memory[offset];
+}
+
+uint8_t get_low_byte(uint16_t word) {
+	return (uint8_t) word;
+}
+
+uint8_t get_high_byte(uint16_t word) {
+	return (uint8_t) word >> 8;
 }
 void main() {}
