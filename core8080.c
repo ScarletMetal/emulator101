@@ -94,6 +94,9 @@ int execute(struct State8080 *state) {
 						state->h = b1;
 						state->pc += 1;
 						break;
+				case 0x2f: // CMA
+						state->a = ~state->a;
+						break;
 				case 0x3e: // MVI, A, D8
 						b1 = opcode[1];
 						state->a = b1;
@@ -429,6 +432,11 @@ int execute(struct State8080 *state) {
 							return 0;
 						} else state->pc += 2;
             break;
+				case 0xe6: // ANI D8
+						b1 = opcode[1];
+						state->a = state-> & b1;
+						state->pc += 1;
+						break;
         default:
             printf("Panic! Unknown Instruction %x", opcode[0]);
             exit(1);
