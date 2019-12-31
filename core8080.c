@@ -18,10 +18,13 @@ void ret(struct State8080 *state);
 
 void jump(struct State8080 *state, uint16_t addr);
 
-void mem_write(struct State8080 *state, uint16_t offset, uint8_t value);
+void write_byte(struct State8080 *state, uint16_t offset, uint8_t value);
 
-uint8_t mem_read(struct State8080 *state, uint16_t offset);
+void write_word(struct State8080 *state, uint16_t offset, uint16_t value);
 
+uint8_t read_byte(struct State8080 *state, uint16_t offset);
+
+uint16_t read_word(struct State8080 *state, uint16_t offset); 
 // util functions 
 uint16_t make_word(uint8_t hb, uint8_t lb);
 
@@ -45,15 +48,15 @@ int execute(struct State8080 *state) {
         case 0x00: //NOP
             break;
 				case 0x01: // LXI B, D16
-						b1 = mem_read(state, opcode[1]);
-						b2 = mem_read(state, opcode[2]);
+						b1 = read_byte(state, opcode[1]);
+						b2 = read_byte(state, opcode[2]);
 						state->b = b2;
 						state->c = b1;
 						state->pc += 2;
 						break;
 				case 0x02: // STAX B
 						offset = make_word(state->b, state->c);
-						mem_write(state, offset, state->a);
+						write_byte(state, offset, state->a);
 						break;
 				case 0x03: // INX B
 						w = make_word(state->b, state->c);
@@ -121,7 +124,7 @@ int execute(struct State8080 *state) {
             break;
         case 0x46: // MOV B, M == MOV B, [hl]
             offset = make_word(state->h, state->l);
-            state->b = mem_read(state, offset); 
+            state->b = read_byte(state, offset); 
             break;
         case 0x47: // MOV B, A
             state->b = state->a;
@@ -145,7 +148,7 @@ int execute(struct State8080 *state) {
             break;
         case 0x4E: // MOV C, M == MOV C, [hl]
             offset = make_word(state->h, state->l);
-            state->c = mem_read(state, offset); 
+            state->c = read_byte(state, offset); 
             break;
         case 0x4f: // MOV C, A
             state->c = state->a;
@@ -169,7 +172,7 @@ int execute(struct State8080 *state) {
             break;
         case 0x56: // MOV D, M == MOV D, [hl]
             offset = make_word(state->h, state->l);
-            state->d = mem_read(state, offset); 
+            state->d = read_byte(state, offset); 
             break;
         case 0x57: // MOV D, A
             state->d = state->a;
@@ -193,7 +196,7 @@ int execute(struct State8080 *state) {
             break;
         case 0x5E: // MOV E, M == MOV E, [hl]
             offset = make_word(state->h, state->l);
-            state->e = mem_read(state, offset); 
+            state->e = read_byte(state, offset); 
             break;
         case 0x5F: // MOV E, A
             state->e = state->a;
@@ -217,7 +220,7 @@ int execute(struct State8080 *state) {
             break;
         case 0x66: // MOV H, M == MOV H, [hl]
             offset = make_word(state->h, state->l);
-            state->h = mem_read(state, offset); 
+            state->h = read_byte(state, offset); 
             break;
         case 0x67: // MOV h, A
             state->h = state->a;
@@ -241,7 +244,7 @@ int execute(struct State8080 *state) {
             break;
         case 0x6E: // MOV L, M == MOV L, [hl]
             offset = make_word(state->h, state->l);
-            state->l = mem_read(state, offset); 
+            state->l = read_byte(state, offset); 
             break;
         case 0x6F: // MOV L, A
             state->l = state->a;
@@ -269,7 +272,7 @@ int execute(struct State8080 *state) {
             break;
         case 0x7E: // MOV A, M == MOV A, [hl]
             offset = make_word(state->h, state->l);
-            state->a = mem_read(state, offset); 
+            state->a = read_byte(state, offset); 
             break;
         case 0x7F: // MOV A, A
             break;
@@ -293,7 +296,7 @@ int execute(struct State8080 *state) {
             break;
         case 0x86: // ADD M == ADD [hl]
             offset = make_word(state->h, state->l);
-            value = mem_read(state, offset); 
+            value = read_byte(state, offset); 
             add(state, value);
             break;
         case 0x87: // ADD A
@@ -319,7 +322,7 @@ int execute(struct State8080 *state) {
             break;
         case 0x8e: // ADC M == ADC [hl]
             offset = make_word(state->h, state->l);
-            value = mem_read(state, offset); 
+            value = read_byte(state, offset); 
             adc(state, value);
             break;
         case 0x8f: // ADC A
@@ -345,7 +348,7 @@ int execute(struct State8080 *state) {
             break;
         case 0x96: // SUB M == SUB [hl]
             offset = make_word(state->h, state->l);
-            value = mem_read(state, offset); 
+            value = read_byte(state, offset); 
             sub(state, value);
             break;
         case 0x97: // SUB A
@@ -371,7 +374,7 @@ int execute(struct State8080 *state) {
             break;
         case 0x9e: // SBB M == SBB [hl]
             offset = make_word(state->h, state->l);
-            value = mem_read(state, offset); 
+            value = read_byte(state, offset); 
             sbb(state, value);
             break;
         case 0x9f: // SBB A
@@ -511,14 +514,22 @@ int parity(int x, int size) {
     return ((p & 0x1) == 0);
 }
 
-void mem_write(struct State8080 *state, uint16_t offset, uint8_t value) {
+void write_byte(struct State8080 *state, uint16_t offset, uint8_t value) {
 	state->memory[offset] = value;
 }
 
-uint8_t mem_read(struct State8080 *state, uint16_t offset) {
+void write_word(struct State8080 *state, uint16_t offset, uint16_t value) {
+	write_byte(state, offset, get_low_byte(value));
+	write_byte(state, offset, get_high_byte(value));
+}
+
+uint8_t read_byte(struct State8080 *state, uint16_t offset) {
 	return state->memory[offset];
 }
 
+uint16_t read_word(struct State8080 *state, uint16_t offset) {
+	return make_word(read_byte(state, offset+1), read_byte(state,offset));
+}
 uint8_t get_low_byte(uint16_t word) {
 	return (uint8_t) word;
 }
@@ -543,7 +554,7 @@ int load_bin_file(struct State8080 *state, int offset, char *file_name) {
 	fread(mem, fsize, 1, fd);
 	fclose(fd);
 	for (int i = 0; i < fsize; i++) {
-		mem_write(state, offset+i, mem[i]);	
+		write_byte(state, offset+i, mem[i]);	
 	}
 }
 
