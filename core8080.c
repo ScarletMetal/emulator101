@@ -29,11 +29,13 @@ uint8_t get_low_byte(uint16_t word);
 
 uint8_t get_high_byte(uint16_t word);
 
-int parity(int x, int size);
-
 void print_state(struct State8080 *state);
 
-int cycle(struct State8080 *state) {
+void update_flags(struct State8080 *state, uint16_t value);
+
+int parity(int x, int size);
+
+int execute(struct State8080 *state) {
     unsigned char *opcode = &state->memory[state->pc];
     uint16_t offset, w;
     uint8_t value, b1, b2;
@@ -436,39 +438,34 @@ int cycle(struct State8080 *state) {
 }
 
 void add(struct State8080 *state, uint8_t value) {
-    uint16_t sum = (uint16_t) state->a + (uint16_t) value;
-    state->flags.z = ((sum & 0xff) == 0);
-    state->flags.s = ((sum & 0x80) != 0);
-    state->flags.cy = (sum > 0xff);
-    state->flags.p = parity(sum & 0xff, 8);
-    state->a = sum & 0xff;
+  uint16_t sum = (uint16_t) state->a + (uint16_t) value;
+	update_flags(state, sum);
+  state->a = sum & 0xff;
 }
 
 void adc(struct State8080 *state, uint8_t value) {
-    uint16_t sum = (uint16_t) state->a + (uint16_t) value + (uint16_t) state->flags.cy;
-    state->flags.z = ((sum & 0xff) == 0);
-    state->flags.s = ((sum & 0x80) != 0);
-    state->flags.cy = (sum > 0xff);
-    state->flags.p = parity(sum & 0xff, 8);
-    state->a = sum & 0xff;
+  uint16_t sum = (uint16_t) state->a + (uint16_t) value + (uint16_t) state->flags.cy;
+	update_flags(state, sum);
+  state->a = sum & 0xff;
 }
 
 void sub(struct State8080 *state, uint8_t value) {
-    uint16_t diff = (uint16_t) state->a - (uint16_t) value;
-    state->flags.z = ((diff & 0xff) == 0);
-    state->flags.s = ((diff & 0x80) != 0);
-    state->flags.cy = (diff > 0xff);
-    state->flags.p = parity(diff & 0xff, 8);
-    state->a = diff & 0xff;
+  uint16_t diff = (uint16_t) state->a - (uint16_t) value;
+	update_flags(state, diff);
+  state->a = diff & 0xff;
 }
 
 void sbb(struct State8080 *state, uint8_t value) {
-    uint16_t diff = (uint16_t) state->a - (uint16_t) value - (uint16_t) state->flags.cy;
-    state->flags.z = ((diff & 0xff) == 0);
-    state->flags.s = ((diff & 0x80) != 0);
-    state->flags.cy = (diff > 0xff);
-    state->flags.p = parity(diff & 0xff, 8);
-    state->a = diff & 0xff;
+  uint16_t diff = (uint16_t) state->a - (uint16_t) value - (uint16_t) state->flags.cy;
+	update_flags(state, diff);	
+  state->a = diff & 0xff;
+}
+
+void update_flags(struct State8080 *state, uint16_t value) {
+	state->flags.z = ((value & 0xff) == 0);
+	state->flags.s = ((value & 0x80) != 0);
+	state->flags.cy = (value > 0xff);
+	state->flags.p = parity(value & 0xff, 8);
 }
 
 void call(struct State8080 *state, uint16_t addr) {

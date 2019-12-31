@@ -28,7 +28,7 @@ struct State8080 {
     uint8_t int_enable;
 };
 
-int cycle(struct State8080 *state);
+int execute(struct State8080 *state);
 int load_bin_file(struct State8080 *state, int offset, char *file_name);
 
 struct State8080 *make_state(int mem_size);
