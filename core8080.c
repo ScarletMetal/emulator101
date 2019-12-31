@@ -372,14 +372,14 @@ int cycle(struct State8080 *state) {
             sbb(state, state->a);
             break;
         case 0xc2: // jnz adr
-            if (!state->flags.z) jump(state, make_word(opcode[1], opcode[2]));
+            if (!state->flags.z) jump(state, make_word(opcode[2], opcode[1]));
             else state->pc += 2;
             break;
         case 0xc3: // jmp adr
-            jump(state, make_word(opcode[1], opcode[2]));
+            jump(state, make_word(opcode[2], opcode[1]));
             break;
         case 0xc4: // cnz adr
-            if (!state->flags.z) call(state, make_word(opcode[1], opcode[2]));
+            if (!state->flags.z) call(state, make_word(opcode[2], opcode[1]));
             else state->pc += 2;
             break;
         case 0xc8: // rz
@@ -389,24 +389,24 @@ int cycle(struct State8080 *state) {
             ret(state);
             break;
         case 0xca: // jz adr
-            if (state->flags.z) jump(state, make_word(opcode[1], opcode[2]));
+            if (state->flags.z) jump(state, make_word(opcode[2], opcode[1]));
             else state->pc += 2;
             break;
         case 0xd2: // jnc adr
-            if (state->flags.cy) jump(state, make_word(opcode[1], opcode[2]));
+            if (state->flags.cy) jump(state, make_word(opcode[2], opcode[1]));
             break;
         case 0xda: // jc adr
-            if (!state->flags.cy) jump(state, make_word(opcode[1], opcode[2]));
+            if (!state->flags.cy) jump(state, make_word(opcode[2], opcode[1]));
             else state->pc += 2;
             break;
         case 0xdc: //
-            if (!state->flags.cy) call(state, make_word(opcode[1], opcode[2]));
+            if (!state->flags.cy) call(state, make_word(opcode[2], opcode[1]));
             break;
         case 0xcd: // call adr
-            call(state, make_word(opcode[1], opcode[2]));
+            call(state, make_word(opcode[2], opcode[1]));
             break;
         case 0xe2: // jpo
-            if (state->flags.p) jump(state, make_word(opcode[1], opcode[2]));
+            if (state->flags.p) jump(state, make_word(opcode[2], opcode[1]));
             else state->pc += 2;
             break;
         default:
