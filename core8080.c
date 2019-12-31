@@ -248,6 +248,7 @@ int execute(struct State8080 *state) {
             break;
 
         case 0x76: // HLT
+						return 1;
             break;
         case 0x78: // MOV A, B
             state->a = state->b;
@@ -434,7 +435,7 @@ int execute(struct State8080 *state) {
             break;
 				case 0xe6: // ANI D8
 						b1 = opcode[1];
-						state->a = state-> & b1;
+						state->a = state->a & b1;
 						state->pc += 1;
 						break;
         default:
@@ -485,7 +486,7 @@ void call(struct State8080 *state, uint16_t addr) {
 }
 
 void ret(struct State8080 *state) {
-    uint16_t offset = state->pc;
+    uint16_t offset = state->sp;
     state->pc = make_word(state->memory[offset], state->memory[offset + 1]);
     state->sp += 2;
 }
