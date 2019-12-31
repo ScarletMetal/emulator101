@@ -372,42 +372,60 @@ int cycle(struct State8080 *state) {
             sbb(state, state->a);
             break;
         case 0xc2: // jnz adr
-            if (!state->flags.z) jump(state, make_word(opcode[2], opcode[1]));
-            else state->pc += 2;
+            if (!state->flags.z) {
+							jump(state, make_word(opcode[2], opcode[1]));
+							return 0;
+						} else state->pc += 2;
             break;
         case 0xc3: // jmp adr
             jump(state, make_word(opcode[2], opcode[1]));
-            break;
+            return 0;
         case 0xc4: // cnz adr
-            if (!state->flags.z) call(state, make_word(opcode[2], opcode[1]));
-            else state->pc += 2;
+            if (!state->flags.z) {
+							call(state, make_word(opcode[2], opcode[1]));
+							return 0;
+						} else state->pc += 2;
             break;
         case 0xc8: // rz
-            if (state->flags.z) ret(state);
-            break;
+            if (state->flags.z) {
+							ret(state);
+							return 0;
+						} break;
         case 0xc9: // ret
             ret(state);
-            break;
+						return 0;
         case 0xca: // jz adr
-            if (state->flags.z) jump(state, make_word(opcode[2], opcode[1]));
-            else state->pc += 2;
+            if (state->flags.z) {
+							jump(state, make_word(opcode[2], opcode[1]));
+							return 0;
+						} else state->pc += 2;
             break;
         case 0xd2: // jnc adr
-            if (state->flags.cy) jump(state, make_word(opcode[2], opcode[1]));
-            break;
+            if (state->flags.cy) {
+							jump(state, make_word(opcode[2], opcode[1]));
+							return 0;
+						}
+						break;
         case 0xda: // jc adr
-            if (!state->flags.cy) jump(state, make_word(opcode[2], opcode[1]));
-            else state->pc += 2;
+            if (!state->flags.cy) {
+							jump(state, make_word(opcode[2], opcode[1]));
+							return 0;
+						} else state->pc += 2;
             break;
         case 0xdc: //
-            if (!state->flags.cy) call(state, make_word(opcode[2], opcode[1]));
-            break;
+            if (!state->flags.cy) {
+							call(state, make_word(opcode[2], opcode[1]));
+							return 0;
+						}
+						break;
         case 0xcd: // call adr
             call(state, make_word(opcode[2], opcode[1]));
-            break;
+						return 0; 
         case 0xe2: // jpo
-            if (state->flags.p) jump(state, make_word(opcode[2], opcode[1]));
-            else state->pc += 2;
+            if (state->flags.p) {
+							jump(state, make_word(opcode[2], opcode[1]));
+							return 0;
+						} else state->pc += 2;
             break;
         default:
             printf("Panic! Unknown Instruction %x", opcode[0]);
@@ -469,6 +487,7 @@ void ret(struct State8080 *state) {
 
 void jump(struct State8080 *state, uint16_t addr) {
     state->pc = addr;
+		printf("jumping to %x\n", addr);
 }
 
 uint16_t make_word(uint8_t hbyte, uint8_t lbyte) {
