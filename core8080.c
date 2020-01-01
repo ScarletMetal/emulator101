@@ -18,6 +18,14 @@ void ret(struct State8080 *state);
 
 void jump(struct State8080 *state, uint16_t addr);
 
+void cmp(struct State8080 *state, uint8_t value);
+
+void and(struct State8080 *state, uint8_t value);
+
+void or(struct State8080 *state, uint8_t value);
+
+void xor(struct State8080 *state, uint8_t value);
+
 void write_byte(struct State8080 *state, uint16_t offset, uint8_t value);
 
 void write_word(struct State8080 *state, uint16_t offset, uint16_t value);
@@ -380,6 +388,78 @@ int execute(struct State8080 *state) {
         case 0x9f: // SBB A
             sbb(state, state->a);
             break;
+				case 0xa0: // ANA B
+						and(state, state->b);
+						break;
+				case 0xa1: // ANA C
+						and(state, state->c);
+						break;
+				case 0xa2: // ANA D
+						and(state, state->d);
+						break;
+				case 0xa3: // ANA E
+						and(state, state->e);
+						break;
+				case 0xa4: // ANA H
+						and(state, state->h);
+						break;
+				case 0xa5: // ANA L
+						and(state, state->l);
+						break;
+				case 0xa6: // ANA M
+						and(state, read_byte(state, make_word(state->h, state->l)));
+						break;
+				case 0xa7: // ANA A
+						and(state, state->a);
+						break;
+				case 0xa8: // XRA B
+						xor(state, state->b);
+						break;
+				case 0xa9: // XRA C
+						xor(state, state->c);
+						break;
+				case 0xaa: // XRA D
+						xor(state, state->d);
+						break;
+				case 0xab: // XRA E
+						xor(state, state->e);
+						break;
+				case 0xac: // XRA H
+						xor(state, state->h);
+						break;
+				case 0xad: // XRA L
+						xor(state, state->l);
+						break;
+				case 0xae: // XRA M
+						xor(state, read_byte(state, make_word(state->h, state->l)));
+						break;
+				case 0xaf: // XRA A
+						xor(state, state->a);
+						break;
+				case 0xb0: // ORA B
+						or(state, state->b);
+						break;
+				case 0xb1: // ORA C
+						or(state, state->c);
+						break;
+				case 0xb2: // ORA D
+						or(state, state->d);
+						break;
+				case 0xb3: // ORA E
+						or(state, state->e);
+						break;
+				case 0xb4: // ORA H
+						or(state, state->h);
+						break;
+				case 0xb5: // ORA L
+						or(state, state->l);
+						break;
+				case 0xb6: // ORA M
+						or(state, read_byte(state, make_word(state->h, state->l)));
+						break;
+				case 0xb7: // ORA A
+						or(state, state->a);
+						break;
         case 0xc2: // jnz adr
             if (!state->flags.z) {
 							jump(state, make_word(opcode[2], opcode[1]));
@@ -481,22 +561,45 @@ void update_flags(struct State8080 *state, uint16_t value) {
 }
 
 void call(struct State8080 *state, uint16_t addr) {
-    uint16_t offset = state->pc + 2;
-    state->memory[state->sp - 1] = (offset >> 8) & 0xff;
-    state->memory[state->sp - 2] = offset & 0xff;
-    state->sp = state->sp - 2;
-    state->pc = addr;
+  uint16_t offset = state->pc + 2;
+  state->memory[state->sp - 1] = (offset >> 8) & 0xff;
+  state->memory[state->sp - 2] = offset & 0xff;
+  state->sp = state->sp - 2;
+  state->pc = addr;
 }
 
 void ret(struct State8080 *state) {
-    uint16_t offset = state->sp;
-    state->pc = make_word(state->memory[offset], state->memory[offset + 1]);
-    state->sp += 2;
+  uint16_t offset = state->sp;
+  state->pc = make_word(state->memory[offset], state->memory[offset + 1]);
+  state->sp += 2;
 }
 
 void jump(struct State8080 *state, uint16_t addr) {
-    state->pc = addr;
-		printf("jumping to %x\n", addr);
+  state->pc = addr;
+	printf("jumping to %x\n", addr);
+}
+
+void cmp(struct State8080 *state, uint8_t value) {
+	uint16_t diff = state->a - value;
+	update_flags(state, diff);
+}
+
+void and(struct State8080 *state, uint8_t value) {
+	uint16_t and = state->a & value;
+	state->a = and;
+	update_flags(state, and);
+}
+
+void or(struct State8080 *state, uint8_t value) {
+	uint16_t or = state->a | value;
+	state->a = or;
+	update_flags(state, or);
+}
+
+void xor(struct State8080 *state, uint8_t value) {
+	uint16_t xor = state->a ^ value;
+	state->a = xor;
+	update_flags(state, xor);
 }
 
 uint16_t make_word(uint8_t hbyte, uint8_t lbyte) {
