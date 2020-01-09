@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "core8080.h"
+#include "disassembler.h"
 
 // cpu instruction abstractions
 void add(struct State8080 *state, uint8_t value);
@@ -15,6 +16,10 @@ void sbb(struct State8080 *state, uint8_t value);
 void call(struct State8080 *state, uint16_t addr);
 
 void ret(struct State8080 *state);
+
+void push(struct State8080 *state, uint8_t hb, uint8_t lb);
+
+uint16_t pop(struct State8080 *state);
 
 void jump(struct State8080 *state, uint16_t addr);
 
@@ -40,6 +45,9 @@ uint8_t get_low_byte(uint16_t word);
 
 uint8_t get_high_byte(uint16_t word);
 
+uint8_t pack_flags(struct State8080 *state); 
+
+void unpack_flags(struct State8080 *state, uint8_t psw);
 void print_state(struct State8080 *state);
 
 void update_flags(struct State8080 *state, uint16_t value);
@@ -50,8 +58,9 @@ int execute(struct State8080 *state) {
     unsigned char *opcode = &state->memory[state->pc];
     uint16_t offset, w;
     uint8_t value, b1, b2;
-
     int addr;
+
+		disassemble_8080(state->memory, state->pc);
     switch (*opcode) {
         case 0x00: //NOP
             break;
@@ -76,6 +85,16 @@ int execute(struct State8080 *state) {
 						b1 = opcode[1];
 						state->b = b1; 
 						state->pc += 1;
+						break;
+				case 0x07: // RLC
+						b1 = ( state->a & 0x80 ) != 0;
+						state->a = (state->a << 1) | b1;
+						state->flags.cy = b1;
+						break;
+				case 0x0f: // RRC
+						b1 = (state->a & 0x1);
+						state->a = (state->a >> 1) | (0b1 << b1);
+						state->flags.cy = b1;
 						break;
 				case 0x08:
 						return 1;
@@ -102,16 +121,22 @@ int execute(struct State8080 *state) {
 						break;
 				case 0x2e: // MVI L, D8
 						b1 = opcode[1];
-						state->h = b1;
+						state->l = b1;
 						state->pc += 1;
 						break;
 				case 0x2f: // CMA
 						state->a = ~state->a;
 						break;
+				case 0x39: // STC
+						state->flags.cy = 1;
+						break;
 				case 0x3e: // MVI, A, D8
 						b1 = opcode[1];
 						state->a = b1;
 						state->pc += 1;
+						break;
+				case 0x3f: // CMC
+						state->flags.cy = ~state->flags.cy;
 						break;
 				case 0x40: // MOV B, B
             break;
@@ -257,10 +282,38 @@ int execute(struct State8080 *state) {
         case 0x6F: // MOV L, A
             state->l = state->a;
             break;
+				case 0x70: // MOV M, B
+						offset = make_word(state->h, state->l);
+						write_byte(state, offset, state->b);
+						break;
+				case 0x71: // MOV M, C
+						offset = make_word(state->h, state->l);
+						write_byte(state, offset, state->c);
+						break;
+				case 0x72: // MOV M, D
+						offset = make_word(state->h, state->l);
+						write_byte(state, offset, state->d);
+						break;
 
+				case 0x73: // MOV M, E
+						offset = make_word(state->h, state->l);
+						write_byte(state, offset, state->e);
+						break;
+				case 0x74: // MOV M, H
+						offset = make_word(state->h, state->l);
+						write_byte(state, offset, state->h);
+						break;
+				case 0x75: // MOV M, L
+						offset = make_word(state->h, state->l);
+						write_byte(state, offset, state->c);
+						break;
         case 0x76: // HLT
 						return 1;
             break;
+				case 0x77: // MOV M, A
+						offset = make_word(state->h, state->l);
+						write_byte(state, offset, state->a);
+						break;
         case 0x78: // MOV A, B
             state->a = state->b;
             break;
@@ -460,6 +513,11 @@ int execute(struct State8080 *state) {
 				case 0xb7: // ORA A
 						or(state, state->a);
 						break;
+				case 0xc1: // POP B
+						w = pop(state);
+						state->b = get_high_byte(w);
+						state->c = get_low_byte(w);
+						break;
         case 0xc2: // jnz adr
             if (!state->flags.z) {
 							jump(state, make_word(opcode[2], opcode[1]));
@@ -475,6 +533,10 @@ int execute(struct State8080 *state) {
 							return 0;
 						} else state->pc += 2;
             break;
+				case 0xc5: // PUSH B
+						push(state, state->b, state->c);
+						break;
+
         case 0xc8: // rz
             if (state->flags.z) {
 							ret(state);
@@ -489,11 +551,19 @@ int execute(struct State8080 *state) {
 							return 0;
 						} else state->pc += 2;
             break;
+				case 0xd1: // PUSH D
+						w = pop(state);
+						state->d = get_high_byte(w);
+						state->e = get_high_byte(w);
+						break;
         case 0xd2: // jnc adr
             if (state->flags.cy) {
 							jump(state, make_word(opcode[2], opcode[1]));
 							return 0;
 						}
+						break;
+				case 0xd5: // PUSH D
+						push(state, state->d, state->e);
 						break;
         case 0xda: // jc adr
             if (!state->flags.cy) {
@@ -510,15 +580,52 @@ int execute(struct State8080 *state) {
         case 0xcd: // call adr
             call(state, make_word(opcode[2], opcode[1]));
 						return 0; 
+				case 0xe1: // POP H
+						w = pop(state);
+						state->h = get_high_byte(w); 
+						state->l = get_low_byte(w);
+						break;
         case 0xe2: // jpo
             if (state->flags.p) {
 							jump(state, make_word(opcode[2], opcode[1]));
 							return 0;
 						} else state->pc += 2;
             break;
+				case 0xe3: // XTHL
+						w = pop(state);
+						state->h = get_high_byte(w);
+						state->l = get_low_byte(w);
+						break;
+				case 0xe5: // PUSH H
+						push(state, state->h, state->l);
+						break;
 				case 0xe6: // ANI D8
 						b1 = opcode[1];
 						state->a = state->a & b1;
+						state->pc += 1;
+						break;
+				case 0xeb: // XCHG
+						b1 = state->h;
+						b2 = state->l;
+						state->h = state->d;
+						state->l = state->e;
+						state->d = b1;
+						state->e = b2;
+						break;
+				case 0xf1: // POP PSW
+						w = pop(state);
+						state->a = get_high_byte(w);
+						unpack_flags(state, get_low_byte(w));
+						break;
+				case 0xf5: // PUSH PSW
+						push(state, state->a, pack_flags(state));
+						break;
+				case 0xf9: // SPHL 
+						state->sp = make_word(state->h, state->l);
+						break;
+				case 0xfe: // CPI 
+						b1 = opcode[1];
+						cmp(state, b1);
 						state->pc += 1;
 						break;
         default:
@@ -576,7 +683,6 @@ void ret(struct State8080 *state) {
 
 void jump(struct State8080 *state, uint16_t addr) {
   state->pc = addr;
-	printf("jumping to %x\n", addr);
 }
 
 void cmp(struct State8080 *state, uint8_t value) {
@@ -602,6 +708,25 @@ void xor(struct State8080 *state, uint8_t value) {
 	update_flags(state, xor);
 }
 
+void push(struct State8080 *state, uint8_t hb, uint8_t lb) {
+	uint16_t offset = state->sp;
+	uint16_t w = make_word(hb, lb);
+	write_byte(state, offset-1, hb);
+	write_byte(state, offset-2, lb);
+	state->sp -= 2;
+}
+
+void pushWord(struct State8080 *state, uint16_t word) {
+	push(state, get_high_byte(word), get_low_byte(word));
+}
+
+uint16_t pop(struct State8080 *state) {
+	uint16_t offset = state->sp;
+	uint8_t b1 = read_byte(state, offset+1);
+	uint8_t b2 = read_byte(state, offset);
+	state->sp += 2;
+	return make_word(b1, b2);
+}
 uint16_t make_word(uint8_t hbyte, uint8_t lbyte) {
     uint16_t word = (hbyte << 8) | lbyte;
     return word;
@@ -622,8 +747,8 @@ void write_byte(struct State8080 *state, uint16_t offset, uint8_t value) {
 }
 
 void write_word(struct State8080 *state, uint16_t offset, uint16_t value) {
-	write_byte(state, offset, get_low_byte(value));
 	write_byte(state, offset, get_high_byte(value));
+	write_byte(state, offset+1, get_low_byte(value));
 }
 
 uint8_t read_byte(struct State8080 *state, uint16_t offset) {
@@ -638,7 +763,7 @@ uint8_t get_low_byte(uint16_t word) {
 }
 
 uint8_t get_high_byte(uint16_t word) {
-	return (uint8_t) word >> 8;
+	return word >> 8; 
 }
 
 void print_state(struct State8080 *state) {
@@ -646,6 +771,17 @@ void print_state(struct State8080 *state) {
 	printf("Z: %x, S: %x, CY: %x, AC: %x, P: %x \n\n", state->flags.z, state->flags.s, state->flags.cy, state->flags.ac, state->flags.p);
 }
 
+uint8_t pack_flags(struct State8080 *state) {
+	return (state->flags.z | state->flags.s << 1 | state->flags.p << 2 | state->flags.cy << 3 | state->flags.ac << 4);  
+}
+
+void unpack_flags(struct State8080 *state, uint8_t psw) {
+	state->flags.z = 0x01 == (psw & 0x01);
+	state->flags.s = 0x02 == (psw & 0x02);
+	state->flags.p = 0x04 == (psw & 0x04);
+	state->flags.cy = 0x08 == (psw & 0x08);
+	state->flags.ac = 0x10 == (psw & 0x10);
+}
 int load_bin_file(struct State8080 *state, int offset, char *file_name) {
 	FILE *fd = fopen(file_name, "rb");
 
