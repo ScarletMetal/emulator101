@@ -280,6 +280,7 @@ int disassemble_8080(unsigned char *codebuffer, int pc){
 		case 0xff: printf("RST    7"); break;
 	}
 	
+	printf("\n");
 	return opbytes;
 }
 
