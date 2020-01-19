@@ -127,9 +127,21 @@ int execute(struct State8080 *state) {
 				case 0x2f: // CMA
 						state->a = ~state->a;
 						break;
+				case 0x32: // STA adr
+						offset = make_word(opcode[1], opcode[2])
+						write_byte(state, offset, state->a);
+						break;
+				case 0x36: // MVI M, D8
+						offset = make_word(state->h, state->l);
+						write_byte(state, offset, opcode[1]);
+						break;
 				case 0x39: // STC
 						state->flags.cy = 1;
 						break;
+				case 0x3a: // LDA D8
+						offset = make_word(opcode[1], opcde[2]);
+						state->a = read_byte(state, offset); 
+						break; 
 				case 0x3e: // MVI, A, D8
 						b1 = opcode[1];
 						state->a = b1;
@@ -537,6 +549,10 @@ int execute(struct State8080 *state) {
 						push(state, state->b, state->c);
 						break;
 
+				case 0xc6: // ADI D8
+						b1 = opcode[1];
+						add(state, b1);
+						break;
         case 0xc8: // rz
             if (state->flags.z) {
 							ret(state);
