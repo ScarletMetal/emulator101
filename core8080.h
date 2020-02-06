@@ -1,7 +1,14 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stddef.h>
-struct Flags {
+
+#define SCREEN_WIDTH 224
+#define SCREEN_HEIGHT 256
+
+#define FPS 60
+#define VRAM_ADDRESS 0x2400
+
+struct flags_8080 {
     uint8_t z:1;
     uint8_t s:1;
     uint8_t cy:1;
@@ -10,7 +17,18 @@ struct Flags {
     uint8_t pad:3;
 };
 
-struct State8080 {
+struct io_8080 {
+	uint8_t *wp;
+	uint8_t *rp;
+	uint8_t shift0;
+	uint8_t shift1;
+
+	uint8_t screen_buffer[SCREEN_HEIGHT][SCREEN_WIDTH][4];
+
+	void (* update_screen)(struct state_8080 *state);
+};
+
+struct state_8080 {
     uint8_t a;
     uint8_t b;
     uint8_t c;
@@ -23,12 +41,19 @@ struct State8080 {
     uint16_t pc;
 
     uint8_t *memory;
-    struct Flags flags;
 
     uint8_t int_enable;
+
+    uint16_t ram_offset;
+
+    struct flags_8080 flags;
+    struct io_8080 *io;
+
+    void (* update_screen) (struct state_8080 *state)
 };
 
-int execute(struct State8080 *state);
-int load_bin_file(struct State8080 *state, int offset, char *file_name);
+int cpu_update(struct state_8080 *state);
+int gpu_update(struct state_8080 *state);
 
-struct State8080 *make_state(int mem_size);
+int load_bin_file(struct state_8080 *state, int offset, char *file_name);
+struct state_8080 *make_state(int mem_size, uint16_t ram_offset);

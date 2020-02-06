@@ -3,7 +3,7 @@
 #include "core8080.h"
 
 void main() {
-	struct State8080 *state = make_state(200);
+	struct state_8080 *state = make_state(200, 0);
 	load_bin_file(state, 0, "code.bin");
 
 	state->sp = 150;
@@ -14,10 +14,10 @@ void main() {
 	printf("hb = %x\n", hb);
 
 	while (!running) {
-		running = execute(state);
+		running = cpu_update(state);
 		print_state(state);
-		printf("sp=%x\n", state->sp);
-		printf("mem[sp] is %x\n", state->memory[state->sp]);
+		//printf("sp=%x\n", state->sp);
+		//printf("mem[sp] is %x\n", state->memory[state->sp]);
 	}	
 	free(state->memory);
 	free(state);
