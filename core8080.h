@@ -49,7 +49,7 @@ struct state_8080 {
     struct flags_8080 flags;
     struct io_8080 *io;
 
-    void (* update_screen) (struct state_8080 *state)
+    void (* update_screen) (struct state_8080 *state);
 };
 
 int cpu_update(struct state_8080 *state);
@@ -57,3 +57,4 @@ int gpu_update(struct state_8080 *state);
 
 int load_bin_file(struct state_8080 *state, int offset, char *file_name);
 struct state_8080 *make_state(int mem_size, uint16_t ram_offset);
+void print_state(struct state_8080 *state);
