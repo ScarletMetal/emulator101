@@ -12,8 +12,9 @@ void main() {
 
 	while (!running) {
 		running = cpu_update(state);
-		print_state(state);
-	}	
+		//print_state(state);
+	}
+	printf("calculation result is %x\n", state->a);
 	free(state->memory);
 	free(state);
 }
