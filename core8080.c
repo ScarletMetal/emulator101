@@ -569,10 +569,10 @@ int cpu_update(struct state_8080 *state) {
                 return 0;
             } else state->pc += 2;
             break;
-        case 0xd1: // PUSH D
+        case 0xd1: // POP D
             w = pop(state);
             state->d = get_high_byte(w);
-            state->e = get_high_byte(w);
+            state->e = get_low_byte(w);
             break;
         case 0xd2: // jnc adr
             if (state->flags.cy) {
