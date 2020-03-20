@@ -84,6 +84,15 @@ int cpu_update(struct state_8080 *state) {
             w += 1;
             state->b = get_high_byte(w);
             state->c = get_low_byte(w);
+            update_flags(state, w);
+            break;
+        case 0x04: // INC B
+            state->b += 1;
+            update_flags(state, state->b);
+            break;
+        case 0x05: // DCR B
+            state->b -= 1;
+            update_flags(state, state->b);
             break;
         case 0x06: // MVI B, D8
             b1 = opcode[1];
@@ -95,6 +104,22 @@ int cpu_update(struct state_8080 *state) {
             state->a = (state->a << 1) | b1;
             state->flags.cy = b1;
             break;
+
+        case 0x0b: // DCX B
+            w = make_word(state->b, state->c);
+            w -= 1;
+            state->b = get_high_byte(w);
+            state->c = get_low_byte(w);
+            update_flags(state, w);
+            break;
+        case 0x0c: // INR C
+            state->c += 1;
+            update_flags(state, state->c);
+            break;
+        case 0x0d: // DCR C
+            state->c -= 1;
+            update_flags(state, state->c);
+            break;
         case 0x0f: // RRC
             b1 = (state->a & 0x1);
             state->a = (state->a >> 1) | (0b1 << b1);
@@ -105,21 +130,82 @@ int cpu_update(struct state_8080 *state) {
             state->c = b1;
             state->pc += 1;
             break;
+        case 0x13: // INX D
+            w = make_word(state->d, state->e);
+            w += 1;
+            state->d = get_high_byte(w);
+            state->e = get_low_byte(w);
+            update_flags(state, w);
+            break;
+        case 0x14: // INR D
+            state->d += 1;
+            update_flags(state, state->d);
+            break;
+        case 0x15: // DCR D
+            state->d -= 1;
+            update_flags(state, state->d);
+            break;
         case 0x16: // MVI D, D8
             b1 = opcode[1];
             state->d = b1;
             state->pc += 1;
+            break;
+        case 0x1b: // DCX D
+            w = make_word(state->d, state->e);
+            w -= 1;
+            state->d = get_high_byte(w);
+            state->e = get_low_byte(w);
+            update_flags(state, w);
+            break;
+        case 0x1c: // INR E
+            state->e += 1;
+            update_flags(state, state->e);
+            break;
+        case 0x1d: // DCR E
+            state->e -= 1;
+            update_flags(state, state->e);
             break;
         case 0x1e: // MVI E, D8
             b1 = opcode[1];
             state->e = b1;
             state->pc += 1;
             break;
+        case 0x23: // INX H
+            w = make_word(state->h, state->l);
+            w += 1;
+            state->h = get_high_byte(w);
+            state->l = get_low_byte(w);
+            update_flags(state, w);
+            break;
+        case 0x24: // INR H
+            state->h += 1;
+            update_flags(state, state->h);
+            break;
+        case 0x25: // DCR H
+            state->h -= 1;
+            update_flags(state, state->h);
+            break;
         case 0x26: // MVI H, D8
             b1 = opcode[1];
             state->h = b1;
             state->pc += 1;
             break;
+        case 0x2b: // DCX H
+            w = make_word(state->h, state->l);
+            w -= 1;
+            state->h = get_high_byte(w);
+            state->l = get_low_byte(w);
+            update_flags(state, w);
+            break;
+        case 0x2c: // INR L
+            state->l += 1;
+            update_flags(state, state->l);
+            break;
+        case 0x2d: // DCR L
+            state->l -= 1;
+            update_flags(state, state->l);
+            break;
+
         case 0x2e: // MVI L, D8
             b1 = opcode[1];
             state->l = b1;
@@ -131,6 +217,32 @@ int cpu_update(struct state_8080 *state) {
         case 0x32: // STA adr
             offset = make_word(opcode[1], opcode[2]);
             write_byte(state, offset, state->a);
+            break;
+        case 0x33: // INX SP
+            state->sp += 1;
+            break;
+        case 0x34: // INR M
+            offset = make_word(state->h, state->l);
+            b1 = read_byte(state, offset) + 1;
+            write_byte(state, offset, b1);
+            update_flags(state, b1);
+            break;
+        case 0x35: // DCR M
+            offset = make_word(state->h, state->l);
+            b1 = read_byte(state, offset) - 1;
+            write_byte(state, offset, b1);
+            update_flags(state, b1);
+            break;
+        case 0x3b: // DCX SP
+            state->sp -= 1;
+            break;
+        case 0x3c: // INR A
+            state->a += 1;
+            update_flags(state, state->a);
+            break;
+        case 0x3d: // DCR A
+            state->a -= 1;
+            update_flags(state, state->a);
             break;
         case 0x36: // MVI M, D8
             offset = make_word(state->h, state->l);
