@@ -100,9 +100,6 @@ int cpu_update(struct state_8080 *state) {
             state->a = (state->a >> 1) | (0b1 << b1);
             state->flags.cy = b1;
             break;
-        case 0x08:
-            return 1;
-            break;
         case 0x0e: // MVI C, D8
             b1 = opcode[1];
             state->c = b1;
