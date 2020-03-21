@@ -2,11 +2,9 @@
 #include <stdlib.h>
 #include <stddef.h>
 
-#define SCREEN_WIDTH 224
-#define SCREEN_HEIGHT 256
-
-#define FPS 60
-#define VRAM_ADDRESS 0x2400
+#include "io8080.h"
+#include "constants.h"
+#include "util.h"
 
 struct flags_8080 {
     uint8_t z:1;
@@ -17,16 +15,6 @@ struct flags_8080 {
     uint8_t pad:3;
 };
 
-struct io_8080 {
-	uint8_t *wp;
-	uint8_t *rp;
-	uint8_t shift0;
-	uint8_t shift1;
-
-	uint8_t screen_buffer[SCREEN_HEIGHT][SCREEN_WIDTH][4];
-
-	void (* update_screen)(struct state_8080 *state);
-};
 
 struct state_8080 {
     uint8_t a;
@@ -49,11 +37,11 @@ struct state_8080 {
     struct flags_8080 flags;
     struct io_8080 *io;
 
+    uint8_t screen_buffer[SCREEN_WIDTH][SCREEN_HEIGHT][4];
     void (* update_screen) (struct state_8080 *state);
 };
 
 int cpu_update(struct state_8080 *state);
-int gpu_update(struct state_8080 *state);
 
 int load_bin_file(struct state_8080 *state, int offset, char *file_name);
 struct state_8080 *make_state(int mem_size, uint16_t ram_offset);

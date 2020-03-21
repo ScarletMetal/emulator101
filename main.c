@@ -18,6 +18,7 @@ int main(int argc, char *argv[]) {
 	while (!running) {
 		running = cpu_update(state);
 	}
+	printf("result in a is %x\n", state->a);
 	free(state->memory);
 	free(state);
 	return 0;
