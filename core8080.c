@@ -64,7 +64,6 @@ int cpu_update(struct state_8080 *state) {
     uint8_t value, b1, b2;
     int addr;
 
-    disassemble_8080(state->memory, state->pc);
     switch (*opcode) {
         case 0x00: //NOP
             break;
@@ -101,10 +100,9 @@ int cpu_update(struct state_8080 *state) {
             break;
         case 0x07: // RLC
             b1 = (state->a & 0x80) != 0;
-            state->a = (state->a << 1) | b1;
+            state->a = state->a << 1 | b1;
             state->flags.cy = b1;
             break;
-
         case 0x0b: // DCX B
             w = make_word(state->b, state->c);
             w -= 1;
@@ -894,10 +892,6 @@ void push(struct state_8080 *state, uint8_t hb, uint8_t lb) {
 	write_byte(state, offset-1, hb);
 	write_byte(state, offset-2, lb);
 	state->sp -= 2;
-}
-
-void pushWord(struct state_8080 *state, uint16_t word) {
-	push(state, get_high_byte(word), get_low_byte(word));
 }
 
 uint16_t pop(struct state_8080 *state) {
