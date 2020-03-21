@@ -1,10 +1,15 @@
 #include <stdio.h>
 
 #include "core8080.h"
+#include "disassembler.h"
 
-void main() {
+int main(int argc, char *argv[]) {
+    char *filename = "code.bin";
+    if (argc > 1)
+        filename = argv[1];
+
 	struct state_8080 *state = make_state(200, 0);
-	load_bin_file(state, 0, "code.bin");
+	load_bin_file(state, 0, filename);
 
 	state->sp = 150;
 
@@ -12,10 +17,9 @@ void main() {
 
 	while (!running) {
 		running = cpu_update(state);
-		//print_state(state);
 	}
-	printf("calculation result is %x\n", state->a);
 	free(state->memory);
 	free(state);
+	return 0;
 }
 
