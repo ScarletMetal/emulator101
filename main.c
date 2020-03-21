@@ -1,7 +1,7 @@
 #include <stdio.h>
 
-#include "core8080.h"
-#include "disassembler.h"
+#include "core/core8080.h"
+#include "core/disassembler.h"
 
 int main(int argc, char *argv[]) {
     char *filename = "code.bin";

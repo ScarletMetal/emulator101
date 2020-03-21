@@ -1,12 +1,12 @@
 CC=gcc
 CFLAGS=-I.
-DEPS=disassembler.h core8080.h
+csrc = $(wildcard core/*.c)
 
-emulator101: disassembler.o core8080.o main.o
-	$(CC) -o emulator101 disassembler.o core8080.o main.o
+obj = $(csrc:.c=.o) main.o
 
-%.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
+./build/%.o: $(csrc)
+	gcc -c $@ -o $^ $(CFLAGS)
 
-clean: 
-	rm *.o
+emulator101: $(obj)
+	$(CC) -o $@ $^ $(CFLAGS)
+	rm -rf $(obj)
