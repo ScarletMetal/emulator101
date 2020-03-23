@@ -932,13 +932,13 @@ void unpack_flags(struct state_8080 *state, uint8_t psw) {
 }
 
 void core8080_io_read(struct state_8080 *state, int port) {
-	uint8_t byte = state->io->ports[port];
-	state->a = byte;
+	state->a = io8080_read_port(state->io, port);
+	state->io->notify_read(port);
 }
 
 void core8080_io_write(struct state_8080 *state, int port) {
-	uint8_t byte = state->a;
-	state->io->ports[port] = byte;
+	io8080_write_port(state->io, port, state->a);
+	state->io->notify_write(port);
 }
 
 int load_bin_file(struct state_8080 *state, int offset, char *file_name) {

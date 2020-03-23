@@ -1,3 +1,4 @@
+#include "stdlib.h"
 #include <stdio.h>
 #include "disassembler.h"
 
@@ -307,4 +308,5 @@ int from_file(char *file_name) {
 		pc += disassemble_8080(buffer, pc);
 		printf("\n");
 	}
+	return 0;
 }
