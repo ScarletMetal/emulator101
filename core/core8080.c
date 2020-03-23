@@ -902,29 +902,10 @@ uint16_t core8080_pop(struct state_8080 *state) {
 	state->sp += 2;
 	return make_word(b1, b2);
 }
-uint16_t make_word(uint8_t hbyte, uint8_t lbyte) {
-    uint16_t word = (hbyte << 8) | lbyte;
-    return word;
-}
-
-int parity(int x, int size) {
-    int p = 0;
-    x = (x & ((1 << size) - 1));
-    for (int i = 0; i < size; i++) {
-        if (x & 0x1) p++;
-        x = x >> 1;
-    }
-    return ((p & 0x1) == 0);
-}
 
 void core8080_write_byte(struct state_8080 *state, uint16_t offset, uint8_t value) {
 	if (state->ram_offset <= offset) state->memory[offset] = value;
 	else printf("Cannot Write To Offset %x, Part Of ROM\n", offset); 
-}
-
-void core8080_write_word(struct state_8080 *state, uint16_t offset, uint16_t value) {
-    core8080_write_byte(state, offset, get_high_byte(value));
-    core8080_write_byte(state, offset + 1, get_low_byte(value));
 }
 
 uint8_t core8080_read_byte(struct state_8080 *state, uint16_t offset) {
@@ -932,16 +913,6 @@ uint8_t core8080_read_byte(struct state_8080 *state, uint16_t offset) {
 	return 0;
 }
 
-uint16_t read_word(struct state_8080 *state, uint16_t offset) {
-	return make_word(core8080_read_byte(state, offset + 1), core8080_read_byte(state, offset));
-}
-uint8_t get_low_byte(uint16_t word) {
-	return (uint8_t) word;
-}
-
-uint8_t get_high_byte(uint16_t word) {
-	return word >> 8; 
-}
 
 void print_state(struct state_8080 *state) {
 	printf("A: %x, B: %x, C: %x, D: %x, E: %x, H: %x, L: %x \n", state->a, state->b, state->c, state->d, state->e, state->h, state->l);
