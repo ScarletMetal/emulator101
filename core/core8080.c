@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+
 #include "core8080.h"
+#include "io8080.h"
+#include "util.h"
 #include "disassembler.h"
 
 // cpu instruction abstractions

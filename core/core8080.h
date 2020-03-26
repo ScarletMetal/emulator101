@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <stddef.h>
 
-#include "io8080.h"
 #include "constants.h"
-#include "util.h"
+
+struct io_8080;
 
 struct flags_8080 {
     uint8_t z:1;
